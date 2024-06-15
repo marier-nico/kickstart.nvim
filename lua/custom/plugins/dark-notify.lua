@@ -3,8 +3,8 @@ return {
   config = function()
     require('dark_notify').run {
       schemes = {
-        dark = 'tokyonight',
-        light = 'tokyonight-day',
+        dark = 'catppuccin-macchiato',
+        light = 'catppuccin-latte',
       },
     }
   end,
