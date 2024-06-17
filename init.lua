@@ -164,7 +164,6 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
@@ -202,6 +201,24 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   callback = function()
     vim.highlight.on_yank()
   end,
+})
+
+-- Disable some plugins and features for large files
+vim.api.nvim_create_autocmd({ 'BufReadPre' }, {
+  callback = function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(bufnr))
+    if ok and stats and (stats.size > 1024 * 1024) then
+      vim.b.large_buf = true
+      vim.cmd 'syntax off'
+      vim.opt_local.spell = false
+      require('ibl').setup_buffer(bufnr, { enabled = false })
+    else
+      vim.b.large_buf = false
+    end
+  end,
+  group = vim.api.nvim_create_augroup('buf_large', { clear = true }),
+  pattern = '*',
 })
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -614,7 +631,12 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        tsserver = {},
+        tsserver = {
+          capabilities = {
+            documentFormattingProvider = true,
+            documentRangeFormattingProvider = true,
+          },
+        },
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
@@ -770,7 +792,7 @@ require('lazy').setup({
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
           ['<C-y>'] = cmp.mapping.confirm { select = true },
-          ['<Tab>'] = cmp.mapping.confirm { select = true },
+          ['<CR>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
@@ -898,6 +920,9 @@ require('lazy').setup({
       auto_install = true,
       highlight = {
         enable = true,
+        disable = function()
+          return vim.b.large_buf
+        end,
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
