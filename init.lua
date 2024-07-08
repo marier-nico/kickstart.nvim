@@ -104,6 +104,9 @@ vim.opt.number = true
 --  Experiment for yourself to see if you like it!
 vim.opt.relativenumber = true
 
+-- Disable line wrapping
+vim.wo.wrap = false
+
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
 
@@ -708,7 +711,7 @@ require('lazy').setup({
         -- languages here or re-enable it for the disabled ones.
         local disable_filetypes = { c = true, cpp = true }
         return {
-          timeout_ms = 500,
+          timeout_ms = 2000,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
         }
       end,
@@ -719,10 +722,11 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        javascript = { { 'prettierd', 'prettier' } },
-        javascriptreact = { { 'prettierd', 'prettier' } },
-        typescript = { { 'prettierd', 'prettier' } },
-        typescriptreact = { { 'prettierd', 'prettier' } },
+        json = { { 'jq' } },
+        javascript = { 'eslint_d', { 'prettierd', 'prettier' } },
+        javascriptreact = { 'eslint_d', { 'prettierd', 'prettier' } },
+        typescript = { 'eslint_d', { 'prettierd', 'prettier' } },
+        typescriptreact = { 'eslint_d', { 'prettierd', 'prettier' } },
       },
     },
   },
