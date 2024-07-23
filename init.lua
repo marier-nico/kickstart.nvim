@@ -638,6 +638,12 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
         tsserver = {
+          init_options = {
+            preferences = {
+              importModuleSpecifierPreference = 'relative',
+              importModuleSpecifierEnding = 'minimal',
+            },
+          },
           capabilities = {
             documentFormattingProvider = true,
             documentRangeFormattingProvider = true,
