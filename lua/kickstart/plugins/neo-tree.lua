@@ -46,7 +46,7 @@ return {
     nesting_rules = {
       ['package.json'] = {
         pattern = '^package%.json$',
-        files = { 'package-lock.json', 'yarn*' },
+        files = { 'package-lock.json', 'yarn*', 'pnpm*' },
       },
       ['go'] = {
         pattern = '(.*)%.go$',
