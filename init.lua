@@ -300,19 +300,19 @@ require('lazy').setup({
       require('which-key').setup()
 
       -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>e'] = { name = '[E]xplorer', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]un', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
-        ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>c', group = '[C]ode' },
+        { '<leader>d', group = '[D]ocument' },
+        { '<leader>e', group = '[E]xplorer' },
+        { '<leader>h', group = 'Git [H]unk' },
+        { '<leader>r', group = '[R]un' },
+        { '<leader>s', group = '[S]earch' },
+        { '<leader>t', group = '[T]oggle' },
+        { '<leader>w', group = '[W]orkspace' },
       }
       -- visual mode
-      require('which-key').register({
-        ['<leader>h'] = { 'Git [H]unk' },
+      require('which-key').add({
+        { '<leader>h', desc = 'Git [H]unk', mode = 'v' },
       }, { mode = 'v' })
     end,
   },
@@ -589,7 +589,7 @@ require('lazy').setup({
           end
 
           -- This is to configure custom server commands
-          if client and client.name == 'tsserver' then
+          if client and client.name == 'ts_ls' then
             map('<leader>co', function()
               vim.lsp.buf.execute_command {
                 title = 'Organize imports',
@@ -636,8 +636,8 @@ require('lazy').setup({
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
         --
-        -- But for many setups, the LSP (`tsserver`) will work just fine
-        tsserver = {
+        -- But for many setups, the LSP (`ts_ls`) will work just fine
+        ts_ls = {
           init_options = {
             preferences = {
               importModuleSpecifierPreference = 'relative',
@@ -687,7 +687,7 @@ require('lazy').setup({
             local server = servers[server_name] or {}
             -- This handles overriding only values explicitly passed
             -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for tsserver)
+            -- certain features of an LSP (for example, turning off formatting for ts_ls)
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
             require('lspconfig')[server_name].setup(server)
           end,
