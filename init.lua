@@ -703,7 +703,7 @@ require('lazy').setup({
       {
         '<leader>f',
         function()
-          require('conform').format { async = true, lsp_fallback = true }
+          require('conform').format { async = true, lsp_format = 'fallback' }
         end,
         mode = '',
         desc = '[F]ormat buffer',
@@ -728,11 +728,11 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        json = { { 'jq' } },
-        javascript = { 'eslint_d', { 'prettierd', 'prettier' } },
-        javascriptreact = { 'eslint_d', { 'prettierd', 'prettier' } },
-        typescript = { 'eslint_d', { 'prettierd', 'prettier' } },
-        typescriptreact = { 'eslint_d', { 'prettierd', 'prettier' } },
+        json = { 'prettierd', 'prettier', 'jq', stop_after_first = true },
+        javascript = { 'eslint_d', 'prettierd', 'prettier', stop_after_first = true },
+        javascriptreact = { 'eslint_d', 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'eslint_d', 'prettierd', 'prettier', stop_after_first = true },
+        typescriptreact = { 'eslint_d', 'prettierd', 'prettier', stop_after_first = true },
       },
     },
   },
