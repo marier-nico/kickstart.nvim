@@ -640,7 +640,7 @@ require('lazy').setup({
         ts_ls = {
           init_options = {
             preferences = {
-              importModuleSpecifierPreference = 'relative',
+              importModuleSpecifierPreference = 'shortest',
               importModuleSpecifierEnding = 'minimal',
             },
           },
