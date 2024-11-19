@@ -79,8 +79,8 @@ return {
           ['/'] = 'fuzzy_finder',
           ['D'] = 'fuzzy_finder_directory',
           ['<c-x>'] = 'clear_filter',
-          ['[h'] = 'prev_git_modified',
-          [']h'] = 'next_git_modified',
+          ['[c'] = 'prev_git_modified',
+          [']c'] = 'next_git_modified',
           ['o'] = {
             function(state)
               local node = state.tree:get_node()

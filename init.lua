@@ -878,6 +878,7 @@ require('lazy').setup({
           neotree = true,
           telescope = true,
           treesitter = true,
+          ufo = true,
           which_key = true,
         },
       }
