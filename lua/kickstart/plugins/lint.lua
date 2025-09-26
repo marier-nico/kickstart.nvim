@@ -1,5 +1,19 @@
-return {
+local function find_package_json_upwards()
+  local current_dir = vim.fn.expand '%:p:h'
+  while true do
+    local pkg_json_path = current_dir .. '/package.json'
+    if vim.loop.fs_stat(pkg_json_path) then
+      return current_dir -- Return the directory, not the file path
+    end
+    local parent_dir = vim.fn.fnamemodify(current_dir, ':h')
+    if parent_dir == current_dir then
+      return nil -- Reached root, not found.
+    end
+    current_dir = parent_dir
+  end
+end
 
+return {
   { -- Linting
     'mfussenegger/nvim-lint',
     event = { 'BufReadPre', 'BufNewFile' },
@@ -50,7 +64,14 @@ return {
       vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
         group = lint_augroup,
         callback = function()
-          require('lint').try_lint()
+          local package_json = find_package_json_upwards()
+
+          if package_json then
+            print('root dir ' .. package_json)
+            require('lint').try_lint(nil, { cwd = package_json })
+          else
+            require('lint').try_lint()
+          end
         end,
       })
     end,
