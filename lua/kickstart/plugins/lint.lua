@@ -67,7 +67,6 @@ return {
           local package_json = find_package_json_upwards()
 
           if package_json then
-            print('root dir ' .. package_json)
             require('lint').try_lint(nil, { cwd = package_json })
           else
             require('lint').try_lint()
