@@ -735,11 +735,41 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        json = { 'prettierd' },
-        javascript = { 'prettierd', 'eslint_d' },
-        javascriptreact = { 'prettierd', 'eslint_d' },
-        typescript = { 'prettierd', 'eslint_d' },
-        typescriptreact = { 'prettierd', 'eslint_d' },
+        json = function()
+          if require('custom.utils').find_in_root 'biome.json' then
+            return { 'biome' }
+          else
+            return { 'prettierd' }
+          end
+        end,
+        javascript = function()
+          if require('custom.utils').find_in_root 'biome.json' then
+            return { 'biome' }
+          else
+            return { 'prettierd', 'eslint_d' }
+          end
+        end,
+        javascriptreact = function()
+          if require('custom.utils').find_in_root 'biome.json' then
+            return { 'biome' }
+          else
+            return { 'prettierd', 'eslint_d' }
+          end
+        end,
+        typescript = function()
+          if require('custom.utils').find_in_root 'biome.json' then
+            return { 'biome' }
+          else
+            return { 'prettierd', 'eslint_d' }
+          end
+        end,
+        typescriptreact = function()
+          if require('custom.utils').find_in_root 'biome.json' then
+            return { 'biome' }
+          else
+            return { 'prettierd', 'eslint_d' }
+          end
+        end,
       },
     },
   },
