@@ -644,7 +644,13 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
+        denols = {
+          root_dir = require('lspconfig').util.root_pattern { 'deno.json', 'deno.jsonc' },
+          single_file_support = false,
+        },
         ts_ls = {
+          root_dir = require('lspconfig').util.root_pattern { 'package.json', 'tsconfig.json' },
+          single_file_support = false,
           init_options = {
             preferences = {
               importModuleSpecifierPreference = 'shortest',
@@ -686,9 +692,10 @@ require('lazy').setup({
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
+        ensure_installed = ensure_installed,
+        automatic_installation = true,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -736,7 +743,9 @@ require('lazy').setup({
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
         json = function()
-          if require('custom.utils').find_in_root 'biome.json' then
+          if require('custom.utils').find_in_root 'deno.json' then
+            return { 'deno_fmt' }
+          elseif require('custom.utils').find_in_root 'biome.json' then
             return { 'biome' }
           else
             return { 'prettierd' }
@@ -757,14 +766,18 @@ require('lazy').setup({
           end
         end,
         typescript = function()
-          if require('custom.utils').find_in_root 'biome.json' then
+          if require('custom.utils').find_in_root 'deno.json' then
+            return { 'deno_fmt' }
+          elseif require('custom.utils').find_in_root 'biome.json' then
             return { 'biome' }
           else
             return { 'prettierd', 'eslint_d' }
           end
         end,
         typescriptreact = function()
-          if require('custom.utils').find_in_root 'biome.json' then
+          if require('custom.utils').find_in_root 'deno.json' then
+            return { 'deno_fmt' }
+          elseif require('custom.utils').find_in_root 'biome.json' then
             return { 'biome' }
           else
             return { 'prettierd', 'eslint_d' }

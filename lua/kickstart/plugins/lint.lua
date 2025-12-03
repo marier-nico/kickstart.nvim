@@ -21,14 +21,21 @@ return {
       local lint = require 'lint'
       local utils = require '../../custom/utils'
 
-      if utils.find_in_root 'biome.json' then
+      if utils.find_in_root 'deno.json' then
+        lint.linters_by_ft = {
+          javascript = { 'deno' },
+          javascriptreact = { 'deno' },
+          typescript = { 'deno' },
+          typescriptreact = { 'deno' },
+        }
+      elseif utils.find_in_root 'biome.json' then
         lint.linters_by_ft = {
           javascript = { 'biomejs' },
           javascriptreact = { 'biomejs' },
           typescript = { 'biomejs' },
           typescriptreact = { 'biomejs' },
         }
-      else
+      elseif utils.find_in_root '.eslintrc.js' or utils.find_in_root '.eslintrc.ts' then
         lint.linters_by_ft = {
           javascript = { 'eslint_d' },
           javascriptreact = { 'eslint_d' },
