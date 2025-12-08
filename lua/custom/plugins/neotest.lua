@@ -1,6 +1,6 @@
 return {
   'nvim-neotest/neotest',
-  dependencies = { 'nvim-neotest/neotest-jest', 'nvim-neotest/nvim-nio' },
+  dependencies = { 'nvim-neotest/neotest-jest', 'marilari88/neotest-vitest', 'nvim-neotest/nvim-nio' },
   config = function()
     require('neotest').setup {
       discovery = {
@@ -8,6 +8,7 @@ return {
         concurrent = 0,
       },
       adapters = {
+        require 'neotest-vitest',
         require 'neotest-jest' {
           jest_test_discovery = true,
           jestConfigFile = function(file)
