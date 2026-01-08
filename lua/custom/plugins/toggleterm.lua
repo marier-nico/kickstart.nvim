@@ -22,11 +22,14 @@ vim.api.nvim_command 'augroup terminal_setup | au!'
 vim.api.nvim_command 'autocmd TermOpen * nnoremap <buffer><LeftRelease> <LeftRelease>i'
 vim.api.nvim_command 'augroup end'
 
+-- NOTE: Disabled because Claude Code uses <C-,> shortcut
+-- If re-enabling, change open_mapping to avoid conflict with Claude Code
 return {
   'akinsho/toggleterm.nvim',
+  enabled = false, -- Disabled in favor of Claude Code floating terminal
   config = function()
     require('toggleterm').setup {
-      open_mapping = [[<C-<>]],
+      open_mapping = [[<C-,]],  -- CONFLICT: Claude Code also uses <C-,>
       hide_numbers = true,
       shade_terminals = true,
       start_in_insert = true,
