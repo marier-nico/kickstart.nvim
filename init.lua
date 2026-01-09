@@ -387,17 +387,6 @@ require('lazy').setup({
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
             end, '[T]oggle Inlay [H]ints')
           end
-
-          -- This is to configure custom server commands
-          if client and client.name == 'ts_ls' then
-            map('<leader>co', function()
-              client:exec_cmd({
-                title = 'Organize imports',
-                command = '_typescript.organizeImports',
-                arguments = { vim.api.nvim_buf_get_name(event.buf) },
-              }, { bufnr = event.buf })
-            end, '[C]ode [O]rganize')
-          end
         end,
       })
 
@@ -470,7 +459,7 @@ require('lazy').setup({
           return { 'deno_fmt' }
         end
         if utils.uses(bufnr, 'biome') then
-          return { 'biome' }
+          return { 'biome-check' }
         end
         if utils.uses(bufnr, 'eslint') then
           return { 'prettierd', 'eslint_d' }
@@ -483,7 +472,7 @@ require('lazy').setup({
           return { 'deno_fmt' }
         end
         if utils.uses(bufnr, 'biome') then
-          return { 'biome' }
+          return { 'biome-check' }
         end
         return { 'prettierd' }
       end
