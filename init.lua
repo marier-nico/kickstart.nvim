@@ -327,7 +327,8 @@ require('lazy').setup({
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
-    branch = '0.1.x',
+    -- The 0.1.x branch is no longer maintained; v0.2+ releases support Nvim 0.11+
+    version = '*',
     dependencies = {
       'nvim-lua/plenary.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
@@ -598,11 +599,11 @@ require('lazy').setup({
           -- This is to configure custom server commands
           if client and client.name == 'ts_ls' then
             map('<leader>co', function()
-              vim.lsp.buf.execute_command {
+              client:exec_cmd({
                 title = 'Organize imports',
                 command = '_typescript.organizeImports',
                 arguments = { vim.api.nvim_buf_get_name(event.buf) },
-              }
+              }, { bufnr = event.buf })
             end, '[C]ode [O]rganize')
           end
         end,
@@ -644,13 +645,9 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        denols = {
-          root_dir = require('lspconfig').util.root_pattern { 'deno.json', 'deno.jsonc' },
-          single_file_support = false,
-        },
+        -- nvim-lspconfig's default root detection already keeps denols to Deno projects and ts_ls out of them
+        denols = {},
         ts_ls = {
-          root_dir = require('lspconfig').util.root_pattern { 'package.json', 'tsconfig.json' },
-          single_file_support = false,
           init_options = {
             preferences = {
               importModuleSpecifierPreference = 'shortest',
@@ -693,19 +690,17 @@ require('lazy').setup({
         'stylua', -- Used to format Lua code
       })
 
+      -- Configs passed to `vim.lsp.config` are merged on top of nvim-lspconfig's defaults.
+      -- Only values explicitly passed above are overridden, which is useful when disabling
+      -- certain features of an LSP (for example, turning off formatting for ts_ls)
+      vim.lsp.config('*', { capabilities = capabilities })
+      for server_name, server in pairs(servers) do
+        vim.lsp.config(server_name, server)
+      end
+
+      -- mason-lspconfig enables every installed server with `vim.lsp.enable`
       require('mason-lspconfig').setup {
         ensure_installed = ensure_installed,
-        automatic_installation = true,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
       }
     end,
   },
@@ -980,35 +975,58 @@ require('lazy').setup({
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    -- The `main` branch does not support lazy-loading and requires `tree-sitter-cli` (`brew install tree-sitter-cli`)
+    branch = 'main',
+    lazy = false,
     build = ':TSUpdate',
-    opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
-      -- Autoinstall languages that are not installed
-      auto_install = true,
-      highlight = {
-        enable = true,
-        disable = function()
-          return vim.b.large_buf
-        end,
-        -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-        --  If you are experiencing weird indenting issues, add the language to
-        --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
-      },
-      indent = { enable = true, disable = { 'ruby' } },
-    },
-    config = function(_, opts)
+    config = function()
       -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+      local treesitter = require 'nvim-treesitter'
+      treesitter.install { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'vim', 'vimdoc' }
 
-      -- Prefer git instead of curl in order to improve connectivity in some environments
-      require('nvim-treesitter.install').prefer_git = true
-      ---@diagnostic disable-next-line: missing-fields
-      require('nvim-treesitter.configs').setup(opts)
+      -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
+      --  If you are experiencing weird indenting issues, add the language to both lists.
+      local regex_highlight_langs = { ruby = true }
+      local indent_disabled_langs = { ruby = true }
+
+      local function attach(bufnr, lang)
+        if not vim.api.nvim_buf_is_valid(bufnr) or not pcall(vim.treesitter.start, bufnr, lang) then
+          return
+        end
+        if regex_highlight_langs[lang] then
+          vim.bo[bufnr].syntax = 'on'
+        end
+        if not indent_disabled_langs[lang] then
+          vim.bo[bufnr].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end
+      end
+
+      vim.api.nvim_create_autocmd('FileType', {
+        group = vim.api.nvim_create_augroup('kickstart-treesitter', { clear = true }),
+        callback = function(event)
+          if vim.b[event.buf].large_buf then
+            return
+          end
+          local lang = vim.treesitter.language.get_lang(event.match)
+          if not lang then
+            return
+          end
+          -- Autoinstall languages that are not installed
+          if not vim.list_contains(treesitter.get_installed 'parsers', lang) and vim.list_contains(treesitter.get_available(), lang) then
+            treesitter.install(lang):await(function()
+              vim.schedule(function()
+                attach(event.buf, lang)
+              end)
+            end)
+            return
+          end
+          attach(event.buf, lang)
+        end,
+      })
 
       -- There are additional nvim-treesitter modules that you can use to interact
       -- with nvim-treesitter. You should go explore a few and see what interests you:
       --
-      --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
