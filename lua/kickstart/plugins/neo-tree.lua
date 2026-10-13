@@ -9,9 +9,10 @@ return {
     'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
     'MunifTanjim/nui.nvim',
   },
-  cmd = 'Neotree',
+  -- neo-tree lazy-loads its own modules, and must load at startup to open directories in place of netrw
+  lazy = false,
   keys = {
-    { '<leader>e', ':Neotree reveal<CR>', { desc = 'NeoTree reveal' } },
+    { '<leader>e', ':Neotree reveal<CR>', desc = 'NeoTree reveal' },
   },
   opts = {
     close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab

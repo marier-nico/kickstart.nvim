@@ -51,11 +51,13 @@ return {
                   return integration_configs[1]
                 end
               end
+
+              print 'Integration config not found'
             end
 
-            -- Let neotest-jest find the config on its own
-            print 'Integration config not found'
-            return nil
+            -- neotest-jest's own lookup (jest.config.ts, then jest.config.js at the project root);
+            -- returning nil would make it always use jest.config.js
+            return require('neotest-jest.jest-util').getJestConfig(file)
           end,
         },
       },

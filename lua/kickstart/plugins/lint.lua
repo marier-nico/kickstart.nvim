@@ -1,16 +1,18 @@
-local function find_package_json_upwards()
-  local current_dir = vim.fn.expand '%:p:h'
-  while true do
-    local pkg_json_path = current_dir .. '/package.json'
-    if vim.loop.fs_stat(pkg_json_path) then
-      return current_dir -- Return the directory, not the file path
-    end
-    local parent_dir = vim.fn.fnamemodify(current_dir, ':h')
-    if parent_dir == current_dir then
-      return nil -- Reached root, not found.
-    end
-    current_dir = parent_dir
+local js_filetypes = { javascript = true, javascriptreact = true, typescript = true, typescriptreact = true }
+
+-- Pick JS/TS linters from the buffer's own project, so files from different projects lint correctly
+local function js_linters(bufnr)
+  local utils = require 'custom.utils'
+  if utils.uses(bufnr, 'deno') then
+    return { 'deno' }
   end
+  if utils.uses(bufnr, 'biome') then
+    return { 'biomejs' }
+  end
+  if utils.uses(bufnr, 'eslint') then
+    return { 'eslint_d' }
+  end
+  return {}
 end
 
 return {
@@ -19,76 +21,13 @@ return {
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local lint = require 'lint'
-      local utils = require '../../custom/utils'
 
-      if utils.find_in_root 'deno.json' then
-        lint.linters_by_ft = {
-          javascript = { 'deno' },
-          javascriptreact = { 'deno' },
-          typescript = { 'deno' },
-          typescriptreact = { 'deno' },
-        }
-      elseif utils.find_in_root 'biome.json' then
-        lint.linters_by_ft = {
-          javascript = { 'biomejs' },
-          javascriptreact = { 'biomejs' },
-          typescript = { 'biomejs' },
-          typescriptreact = { 'biomejs' },
-        }
-      elseif utils.find_in_root '.eslintrc.js' or utils.find_in_root '.eslintrc.ts' then
-        lint.linters_by_ft = {
-          javascript = { 'eslint_d' },
-          javascriptreact = { 'eslint_d' },
-          typescript = { 'eslint_d' },
-          typescriptreact = { 'eslint_d' },
-        }
-      end
-
-      -- To allow other plugins to add linters to require('lint').linters_by_ft,
-      -- instead set linters_by_ft like this:
-      -- lint.linters_by_ft = lint.linters_by_ft or {}
-      -- lint.linters_by_ft['markdown'] = { 'markdownlint' }
-      --
-      -- However, note that this will enable a set of default linters,
-      -- which will cause errors unless these tools are available:
-      -- {
-      --   clojure = { "clj-kondo" },
-      --   dockerfile = { "hadolint" },
-      --   inko = { "inko" },
-      --   janet = { "janet" },
-      --   json = { "jsonlint" },
-      --   markdown = { "vale" },
-      --   rst = { "vale" },
-      --   ruby = { "ruby" },
-      --   terraform = { "tflint" },
-      --   text = { "vale" }
-      -- }
-      --
-      -- You can disable the default linters by setting their filetypes to nil:
-      -- lint.linters_by_ft['clojure'] = nil
-      -- lint.linters_by_ft['dockerfile'] = nil
-      -- lint.linters_by_ft['inko'] = nil
-      -- lint.linters_by_ft['janet'] = nil
-      -- lint.linters_by_ft['json'] = nil
-      -- lint.linters_by_ft['markdown'] = nil
-      -- lint.linters_by_ft['rst'] = nil
-      -- lint.linters_by_ft['ruby'] = nil
-      -- lint.linters_by_ft['terraform'] = nil
-      -- lint.linters_by_ft['text'] = nil
-
-      -- Create autocommand which carries out the actual linting
-      -- on the specified events.
-      local lint_augroup = vim.api.nvim_create_augroup('lint', { clear = true })
       vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
-        group = lint_augroup,
-        callback = function()
-          local package_json = find_package_json_upwards()
-
-          if package_json then
-            require('lint').try_lint(nil, { cwd = package_json })
-          else
-            require('lint').try_lint()
-          end
+        group = vim.api.nvim_create_augroup('lint', { clear = true }),
+        callback = function(args)
+          local linters = js_filetypes[vim.bo[args.buf].filetype] and js_linters(args.buf) or nil
+          -- Run linters from the nearest package.json so they resolve the project's config and plugins
+          lint.try_lint(linters, { cwd = vim.fs.root(args.buf, 'package.json') })
         end,
       })
     end,
