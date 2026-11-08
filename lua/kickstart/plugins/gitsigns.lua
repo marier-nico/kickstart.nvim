@@ -21,8 +21,17 @@ return {
         end
 
         -- Navigation
+        -- In a codediff/review.nvim view, gitsigns' buffer-local map shadows codediff's, so
+        -- defer to codediff first (it returns false outside its views)
+        local function codediff_nav(direction)
+          local codediff = package.loaded['codediff']
+          return codediff and codediff[direction .. '_hunk']()
+        end
+
         map('n', ']c', function()
-          if vim.wo.diff then
+          if codediff_nav 'next' then
+            return
+          elseif vim.wo.diff then
             vim.cmd.normal { ']c', bang = true }
           else
             gitsigns.nav_hunk 'next'
@@ -30,7 +39,9 @@ return {
         end, { desc = 'Jump to next git [c]hange' })
 
         map('n', '[c', function()
-          if vim.wo.diff then
+          if codediff_nav 'prev' then
+            return
+          elseif vim.wo.diff then
             vim.cmd.normal { '[c', bang = true }
           else
             gitsigns.nav_hunk 'prev'
